@@ -24,4 +24,4 @@ for i in list_of_times:
         if i == data['urlset']['url'][j]['lastmod'][0:10]:
             list_of_news.append(data['urlset']['url'][j]['loc'][14:])
 
-print(list_of_news)
+print(dict(enumerate(list_of_news, 1)))
