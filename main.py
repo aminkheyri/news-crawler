@@ -1,9 +1,12 @@
 import requests
 import xmltodict
 from datetime import date, timedelta
+from bs4 import BeautifulSoup
 
 list_of_times = []
+list_of_urls = []
 list_of_news = []
+primary_url = 'https://www.varzesh3.com/'
 url = "https://www.varzesh3.com/sitemap/news"
 result = requests.get(url)
 data = xmltodict.parse(result.content)
@@ -14,14 +17,30 @@ def daterange(start_date, end_date):
         yield start_date + timedelta(n)
 
 
-start_date = date(2021, 9, 8)
-end_date = date(2021, 9, 10)
+start_date = date(2021, 9, 12)
+end_date = date(2021, 9, 13)
 for single_date in daterange(start_date, end_date):
     list_of_times.append(single_date.strftime("%Y-%m-%d"))
 print(list_of_times)
+
 for i in list_of_times:
     for j in range(len(data['urlset']['url'])):
         if i == data['urlset']['url'][j]['lastmod'][0:10]:
-            list_of_news.append(data['urlset']['url'][j]['loc'][14:])
+            list_of_urls.append(primary_url + data['urlset']['url'][j]['loc'][:14])
 
-print(dict(enumerate(list_of_news, 1)))
+
+for url in list_of_urls:
+    raw_url = requests.get(url=url)
+    content = BeautifulSoup(raw_url.text, 'html.parser')
+    final_content = content.find('div', {'class': 'col-xs-12 news-page--news-text text-justify'})
+    if final_content == None:
+        continue
+    else:
+        list_of_news.append(final_content.text)
+
+news_dict = dict(enumerate(list_of_news, 1))
+
+for key, value in news_dict.items():
+    with open(str(key) + '.txt', 'w+', encoding="utf8") as f:
+        f.write(value)
+
